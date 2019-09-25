@@ -6,7 +6,7 @@
 project: '{{ $project }}'
 configVersion: 1
 ---
-artifact: meteor-dev
+artifact: meteor-artifact
 from: node:{{ $nodeVersion }}
 git:
   - add: /
@@ -87,7 +87,7 @@ docker:
   # -Xmx256m -Xss512k -XX:MetaspaceSize=100m
   CMD: ['node', 'main.js']
 import:
-  - artifact: 'meteor-dev'
+  - artifact:  meteor-artifact
     add: /opt/reaction/dist/bundle
     to: /app
     owner: node
