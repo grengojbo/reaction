@@ -1,0 +1,103 @@
+# {{ $_ := env "SPECIFIC_ENV_HERE" | set . "GitBranch" }}
+# {{ $_ := env "DEPLOY_MODE" | set . "DeployMode" }}
+# {{ $project := "reaction" }}
+# {{ $meteorVersion := "1.8.0.2"}}
+# {{ $nodeVersion := "8.11.4" }}
+project: '{{ $project }}'
+configVersion: 1
+---
+artifact: meteor-dev
+from: node:{{ $nodeVersion }}
+git:
+  - add: /
+    to: /opt/reaction/src
+    owner: node
+    group: node
+    excludePaths:
+      - dist
+      - node_modules
+    #stageDependencies:
+    #  install:
+    #    - 'METEOR_VERSION'
+    #   setup:
+    #     - 'src'
+#mount:
+#  - fromPath: {{ env "CI_PROJECT_DIR" }}
+#    to: /result
+shell:
+  beforeInstall:
+    - 'echo "SECTION beforeInstall [artifact]"'
+    - 'apt-get update -y'
+    - 'apt-get install -y --no-install-recommends build-essential bsdtar bzip2 ca-certificates git python wget librdkafka-dev libsasl2-dev'
+    - 'rm -rf /var/lib/apt/lists/*'
+    - 'mkdir -p /opt/reaction/src'
+    - 'mkdir -p /opt/reaction/dist'
+    - 'chown -R node /opt/reaction/src'
+    - 'chown -R node /opt/reaction/dist'
+    - 'npm i -g reaction-cli'
+  install:
+    - 'echo "SECTION install [artifact]"'
+    - 'cd /opt/reaction/src'
+    - 'echo -----------------------------------------------------------'
+    - 'echo "# install-meteor VERSION: {{ $meteorVersion }}"'
+    - 'echo "# replaces tar command with bsdtar in the install script (bsdtar -xf \"TARBALL_FILE\" -C \"INSTALL_TMPDIR\""'
+    - 'echo "# https://github.com/jshimko/meteor-launchpad/issues/39"'
+    - 'echo "################################"'
+    - 'wget -O /tmp/install_meteor.sh https://install.meteor.com'
+    #- 'sed -i.bak "s/RELEASE=.*/RELEASE=\"$METEOR_VERSION\"/g" /tmp/install_meteor.sh'
+    #- 'sed -i.bak "s/tar -xzf.*/bsdtar -xf \"\$TARBALL_FILE\" -C \"\$INSTALL_TMPDIR\"/g" /tmp/install_meteor.sh'
+    #- 'echo Installing Meteor $METEOR_VERSION'
+    #- 'sh /tmp/install_meteor.sh'
+    #- 'rm /tmp/install_meteor.sh'
+    #- cd /app
+    #- mvn dependency:go-offline -B
+    #- mvn -B -f pom.xml -s /usr/share/maven/ref/settings-docker.xml dependency:go-offline
+    #- 'echo -----------------------------------------------------------'
+  beforeSetup:
+    - 'echo "SECTION beforeSetup [artifact]"'
+  setup:
+    - 'echo "SECTION setup (artifact mode: {{ env "MODE" }})'
+    - 'echo -----------------------------------------------------------'
+    - cd /app
+#     #- mvn package
+#     - mvn package -DskipTests -P {{ env "MODE" }}
+#     - 'echo -----------------------------------------------------------'
+---
+image: '{{ $project }}-{{ env "MODE" }}'
+from: node:8.11.4-slim
+docker:
+  WORKDIR: /app
+  USER: node
+  ENV: 
+    ROOT_URL: "http://localhost"
+    PORT: "3000"
+  EXPOSE: 
+    - "3000"
+  LABEL: 
+    maintainer: "o.dolya@iwis.com.ua"
+  #ENTRYPOINT: ["/docker-entrypoint.sh"]
+  # -XX:+UseContainerSupport
+  # -Djava.security.egd=file:/dev/./urandom
+  # -Xmx256m -Xss512k -XX:MetaspaceSize=100m
+  CMD: ['node', 'main.js']
+import:
+  - artifact: 'meteor-dev'
+    add: /opt/reaction/dist/bundle
+    to: /app
+    owner: node
+    group: node
+    after: install
+shell:
+  beforeInstall:
+    - 'echo "SECTION beforeInstall"'
+  install:
+    - 'echo -----------------------------------------------------------'
+    - 'echo "SECTION install"'
+    - 'echo -----------------------------------------------------------'
+  beforeSetup:
+    - 'echo "SECTION beforeSetup"'
+  setup:
+    - 'echo -----------------------------------------------------------'
+    - 'echo "SECTION setup"'
+    - 'echo -----------------------------------------------------------'
+asLayers: false
