@@ -16,9 +16,9 @@ git:
     excludePaths:
       - dist
       - node_modules
-    #stageDependencies:
-    #  install:
-    #    - 'METEOR_VERSION'
+    stageDependencies:
+     install:
+       - 'METEOR_VERSION'
     #   setup:
     #     - 'src'
 #mount:
@@ -35,28 +35,33 @@ shell:
     - 'chown -R node /opt/reaction/src'
     - 'chown -R node /opt/reaction/dist'
     - 'npm i -g reaction-cli'
-  install:
-    - 'echo "SECTION install [artifact]"'
     - 'cd /opt/reaction/src'
     - 'echo -----------------------------------------------------------'
-    - 'echo "# install-meteor VERSION: {{ $meteorVersion }}"'
+    - 'echo "# Installing Meteor {{ $meteorVersion }}"'
     - 'echo "# replaces tar command with bsdtar in the install script (bsdtar -xf \"TARBALL_FILE\" -C \"INSTALL_TMPDIR\""'
     - 'echo "# https://github.com/jshimko/meteor-launchpad/issues/39"'
-    - 'echo "################################"'
+    - 'echo -----------------------------------------------------------'
     - 'wget -O /tmp/install_meteor.sh https://install.meteor.com'
-    #- 'sed -i.bak "s/RELEASE=.*/RELEASE=\"$METEOR_VERSION\"/g" /tmp/install_meteor.sh'
+    - 'sed -i.bak "s/RELEASE=.*/RELEASE=\"$METEOR_VERSION\"/g" /tmp/install_meteor.sh'
     #- 'sed -i.bak "s/tar -xzf.*/bsdtar -xf \"\$TARBALL_FILE\" -C \"\$INSTALL_TMPDIR\"/g" /tmp/install_meteor.sh'
     #- 'echo Installing Meteor $METEOR_VERSION'
-    #- 'sh /tmp/install_meteor.sh'
-    #- 'rm /tmp/install_meteor.sh'
+    - 'sh /tmp/install_meteor.sh'
+    - 'rm /tmp/install_meteor.sh'
+    - 'export PATH=$PATH:/home/node/.meteor'
     #- cd /app
     #- mvn dependency:go-offline -B
     #- mvn -B -f pom.xml -s /usr/share/maven/ref/settings-docker.xml dependency:go-offline
     #- 'echo -----------------------------------------------------------'
+  install:
+    - 'echo "SECTION install [artifact]"'
+    - 'cd /opt/reaction/src'
+    - 'echo -----------------------------------------------------------'
+    - '/opt/reaction/src/.reaction/test-script.sh'
+    - 'echo -----------------------------------------------------------'
   beforeSetup:
     - 'echo "SECTION beforeSetup [artifact]"'
   setup:
-    - 'echo "SECTION setup (artifact mode: {{ env "MODE" }})'
+    - 'echo "SECTION setup (artifact mode: {{ env "MODE" }})"'
     - 'echo -----------------------------------------------------------'
     - cd /app
 #     #- mvn package
