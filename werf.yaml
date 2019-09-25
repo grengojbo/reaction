@@ -19,8 +19,9 @@ git:
     stageDependencies:
      install:
        - '.reaction/test-script.sh'
+       - '.reaction/pre-build.sh'
        - 'package.json'
-       - ''
+       - 'package-lock.json'
     #   setup:
     #     - 'src'
 #mount:
@@ -46,18 +47,15 @@ shell:
     - 'wget -O /tmp/install_meteor.sh https://install.meteor.com'
     - 'sed -i.bak "s/RELEASE=.*/RELEASE=\"{{ $meteorVersion }}\"/g" /tmp/install_meteor.sh'
     - 'sed -i.bak "s/tar -xzf.*/bsdtar -xf \"\$TARBALL_FILE\" -C \"\$INSTALL_TMPDIR\"/g" /tmp/install_meteor.sh'
-    - 'sh /tmp/install_meteor.sh'
-    - 'rm /tmp/install_meteor.sh'
-    - 'export PATH=$PATH:/home/node/.meteor'
-    #- cd /app
-    #- mvn dependency:go-offline -B
-    #- mvn -B -f pom.xml -s /usr/share/maven/ref/settings-docker.xml dependency:go-offline
-    #- 'echo -----------------------------------------------------------'
+    - 'bash /tmp/install_meteor.sh'
+    #- 'rm /tmp/install_meteor.sh'
   install:
     - 'echo "SECTION install [artifact]"'
+    - rm -Rf /root/.config
     - 'cd /opt/reaction/src'
     - 'echo -----------------------------------------------------------'
-    - 'su - node -c "export PATH=$PATH:/home/node/.meteor && /opt/reaction/src/.reaction/test-script.sh {{ $meteorVersion }}"'
+    #- 'su - node -c "export PATH=$PATH:/home/node/.meteor && /opt/reaction/src/.reaction/test-script.sh {{ $meteorVersion }}"'
+    - 'su - node -c "/opt/reaction/src/.reaction/pre-build.sh {{ $meteorVersion }}"'
     - 'echo -----------------------------------------------------------'
   beforeSetup:
     - 'echo "SECTION beforeSetup [artifact]"'
