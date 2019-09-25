@@ -18,7 +18,9 @@ git:
       - node_modules
     stageDependencies:
      install:
-       - 'METEOR_VERSION'
+       - '.reaction/test-script.sh'
+       - 'package.json'
+       - ''
     #   setup:
     #     - 'src'
 #mount:
@@ -42,9 +44,8 @@ shell:
     - 'echo "# https://github.com/jshimko/meteor-launchpad/issues/39"'
     - 'echo -----------------------------------------------------------'
     - 'wget -O /tmp/install_meteor.sh https://install.meteor.com'
-    - 'sed -i.bak "s/RELEASE=.*/RELEASE=\"$METEOR_VERSION\"/g" /tmp/install_meteor.sh'
-    #- 'sed -i.bak "s/tar -xzf.*/bsdtar -xf \"\$TARBALL_FILE\" -C \"\$INSTALL_TMPDIR\"/g" /tmp/install_meteor.sh'
-    #- 'echo Installing Meteor $METEOR_VERSION'
+    - 'sed -i.bak "s/RELEASE=.*/RELEASE=\"{{ $meteorVersion }}\"/g" /tmp/install_meteor.sh'
+    - 'sed -i.bak "s/tar -xzf.*/bsdtar -xf \"\$TARBALL_FILE\" -C \"\$INSTALL_TMPDIR\"/g" /tmp/install_meteor.sh'
     - 'sh /tmp/install_meteor.sh'
     - 'rm /tmp/install_meteor.sh'
     - 'export PATH=$PATH:/home/node/.meteor'
@@ -56,12 +57,14 @@ shell:
     - 'echo "SECTION install [artifact]"'
     - 'cd /opt/reaction/src'
     - 'echo -----------------------------------------------------------'
-    - '/opt/reaction/src/.reaction/test-script.sh'
+    - 'su - node -c "export PATH=$PATH:/home/node/.meteor && /opt/reaction/src/.reaction/test-script.sh {{ $meteorVersion }}"'
     - 'echo -----------------------------------------------------------'
   beforeSetup:
     - 'echo "SECTION beforeSetup [artifact]"'
+    - 'cd /opt/reaction/src'
+    - export PATH=$PATH:/home/node/.meteor:/opt/reaction/src/node_modules/.bin
   setup:
-    - 'echo "SECTION setup (artifact mode: {{ env "MODE" }})"'
+    - 'echo "SECTION setup [artifact mode: {{ env "MODE" }}]"'
     - 'echo -----------------------------------------------------------'
     - cd /app
 #     #- mvn package
@@ -69,7 +72,7 @@ shell:
 #     - 'echo -----------------------------------------------------------'
 ---
 image: '{{ $project }}-{{ env "MODE" }}'
-from: node:8.11.4-slim
+from: node:{{ $nodeVersion }}-slim
 docker:
   WORKDIR: /app
   USER: node

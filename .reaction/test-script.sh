@@ -1,6 +1,6 @@
 #!/bin/bash
 
-METEOR_VERSION=${1:-1.8.0.2}
+METEOR_VERSION=${1:-1.8.1}
 APP_SOURCE_DIR=${APP_SOURCE_DIR:-/opt/reaction/src}
 APP_BUNDLE_DIR=${APP_BUNDLE_DIR:-/opt/reaction/dist}
 
