@@ -16,4 +16,6 @@ meteor build --server-only --architecture os.linux.x86_64 --directory "${APP_BUN
 
 cd ${APP_BUNDLE_DIR}/bundle/programs/server/
 
+# meteor npm install --save @babel/runtime
+meteor npm install @babel/runtime
 meteor npm install --production

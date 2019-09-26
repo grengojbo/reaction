@@ -90,8 +90,7 @@ docker:
   CMD: ['node', 'main.js']
 import:
   - artifact:  meteor-artifact
-    # add: /opt/reaction/dist/bundle
-    add: /opt/reaction/dist/
+    add: /opt/reaction/dist/bundle
     to: /app
     owner: node
     group: node

@@ -45,7 +45,7 @@ endif
 
 ifeq ($(CI_JWERF_IMAGES_REPOOB_ID),)
   # WERF_IMAGES_REPO := "${AWS_ECR_NAME}/${AWS_REPO_NAME}/${APP_NAME}"
-  WERF_IMAGES_REPO := "${AWS_REPO_NAME}/${APP_NAME}"
+  WERF_IMAGES_REPO := "${AWS_REPO_NAME}"
 endif
 
 ifeq ($(K8S_NAMESPACE),)
@@ -126,7 +126,7 @@ build:
 
 release:
 	@echo "Build and Publish image ${WERF_IMAGES_REPO} tag: ${TAG}"
-	@#werf build-and-publish --stages-storage :local --images-repo=${WERF_IMAGES_REPO} --tag-custom=${TAG}
+	@werf build-and-publish --stages-storage :local --images-repo=${WERF_IMAGES_REPO} --tag-custom="${TAG}"
 
 clean:
 	@echo "Start clean"

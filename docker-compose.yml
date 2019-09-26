@@ -18,10 +18,13 @@ networks:
 services:
 
   reaction:
-    build:
-      context: .
-      target: meteor-dev
-    command: bash -c "time meteor npm install --no-audit && node ./.reaction/waitForMongo.js && node --experimental-modules ./.reaction/scripts/run.mjs"
+    image: ${REACTION_IMAGE}:${REACTION_TAG}
+    #build:
+    #  context: .
+    #  target: meteor-dev
+    entrypoint: /bin/true
+    # command: /bin/bash
+    #command: bash -c "time meteor npm install --no-audit && node ./.reaction/waitForMongo.js && node --experimental-modules ./.reaction/scripts/run.mjs"
     depends_on:
       - mongo
     env_file:
@@ -33,10 +36,12 @@ services:
     ports:
       - "3000:3000"
       - "9229:9229"
+    restart: on-failure
     volumes:
-      - .:/opt/reaction/src:cached
-      - reaction_meteor_local:/opt/reaction/src/.meteor/local
-      - reaction_node_modules:/opt/reaction/src/node_modules # do not link node_modules in, and persist it between dc up runs
+      - ./node_modules:/node_modules
+      #- .:/opt/reaction/src:cached
+      #- reaction_meteor_local:/opt/reaction/src/.meteor/local
+      #- reaction_node_modules:/opt/reaction/src/node_modules # do not link node_modules in, and persist it between dc up runs
 
   mongo:
     image: mongo:3.6.3
