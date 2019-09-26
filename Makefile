@@ -120,11 +120,13 @@ update:
 
 shell:
 	@werf run --stages-storage :local --shell
+
 build:
 	@werf build --stages-storage :local --introspect-before-error
 
 release:
-	@werf build-and-publish --stages-storage :local --images-repo=${WERF_IMAGES_REPO} --tag-custom=${TAG}
+	@echo "Build and Publish image ${WERF_IMAGES_REPO} tag: ${TAG}"
+	@#werf build-and-publish --stages-storage :local --images-repo=${WERF_IMAGES_REPO} --tag-custom=${TAG}
 
 clean:
 	@echo "Start clean"

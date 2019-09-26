@@ -86,7 +86,7 @@ docker:
     - "3000"
   LABEL: 
     maintainer: "o.dolya@iwis.com.ua"
-  #ENTRYPOINT: ["/docker-entrypoint.sh"]
+  ENTRYPOINT: ["/docker-entrypoint.sh"]
   CMD: ['node', 'main.js']
 import:
   - artifact:  meteor-artifact
@@ -96,6 +96,25 @@ import:
     owner: node
     group: node
     after: install
+git:
+  - add: /
+    to: /app
+    owner: node
+    group: node
+    includePaths:
+      - '.reaction'
+      - bin
+      - public
+    #excludePaths:
+    #  - dist
+    #  - node_modules
+    stageDependencies:
+      #install:
+      #  - '.reaction'
+      setup:
+        - '.reaction'
+        - bin
+        - public
 shell:
   beforeInstall:
     - 'echo "SECTION beforeInstall"'
@@ -107,8 +126,11 @@ shell:
     - 'echo "SECTION beforeSetup"'
   setup:
     - 'echo -----------------------------------------------------------'
-    - 'echo "SECTION setup"'
+    - 'echo "SECTION setup [mode: {{ env "MODE" }}]"'
     - 'echo -----------------------------------------------------------'
+    - 'cd /app'
+    - 'cp /app/bin/docker-entrypoint.sh /docker-entrypoint.sh'
+    - 'chmod 0777 /docker-entrypoint.sh'
 # {{- else }}
 ---
 image: '{{ $project }}-{{ env "MODE" }}'
