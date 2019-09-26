@@ -17,13 +17,12 @@ git:
       - dist
       - node_modules
     stageDependencies:
-     install:
-       - '.reaction/test-script.sh'
-       - '.reaction/pre-build.sh'
-       - 'package.json'
-       - 'package-lock.json'
-    #   setup:
-    #     - 'src'
+      install:
+        - '.reaction'
+        - '.meteor'
+      setup:
+        - 'package.json'
+        - 'package-lock.json'
 #mount:
 #  - fromPath: {{ env "CI_PROJECT_DIR" }}
 #    to: /result
@@ -48,26 +47,30 @@ shell:
     - 'sed -i.bak "s/RELEASE=.*/RELEASE=\"{{ $meteorVersion }}\"/g" /tmp/install_meteor.sh'
     - 'sed -i.bak "s/tar -xzf.*/bsdtar -xf \"\$TARBALL_FILE\" -C \"\$INSTALL_TMPDIR\"/g" /tmp/install_meteor.sh'
     - 'bash /tmp/install_meteor.sh'
+    - 'test ! -d /root/.meteor || mv /root/.meteor /home/node/'
+    - 'cd /home/node'
+    - 'test ! -d /home/node/.meteor/local || chown -Rh node .meteor/local'
     #- 'rm /tmp/install_meteor.sh'
   install:
     - 'echo "SECTION install [artifact]"'
     - rm -Rf /root/.config
     - 'cd /opt/reaction/src'
     - 'echo -----------------------------------------------------------'
-    #- 'su - node -c "export PATH=$PATH:/home/node/.meteor && /opt/reaction/src/.reaction/test-script.sh {{ $meteorVersion }}"'
     - 'su - node -c "/opt/reaction/src/.reaction/pre-build.sh {{ $meteorVersion }}"'
     - 'echo -----------------------------------------------------------'
   beforeSetup:
     - 'echo "SECTION beforeSetup [artifact]"'
-    - 'cd /opt/reaction/src'
-    - export PATH=$PATH:/home/node/.meteor:/opt/reaction/src/node_modules/.bin
+    - 'mkdir /opt/reaction/src/node_modules'
+    - 'chown node /opt/reaction/src/node_modules'
+    - 'mkdir -p /opt/reaction/src/.meteor/local'
+    - 'chown node /opt/reaction/src/.meteor/local'
   setup:
     - 'echo "SECTION setup [artifact mode: {{ env "MODE" }}]"'
+    - 'cd /opt/reaction/src'
+    - 'export PATH=$PATH:/home/node/.meteor:/opt/reaction/src/node_modules/.bin'
     - 'echo -----------------------------------------------------------'
-    - cd /app
-#     #- mvn package
-#     - mvn package -DskipTests -P {{ env "MODE" }}
-#     - 'echo -----------------------------------------------------------'
+    - 'su - node -c "/opt/reaction/src/.reaction/build-{{ env "MODE" }}.sh"'
+    - 'echo -----------------------------------------------------------'
 ---
 image: '{{ $project }}-{{ env "MODE" }}'
 from: node:{{ $nodeVersion }}-slim
@@ -82,9 +85,6 @@ docker:
   LABEL: 
     maintainer: "o.dolya@iwis.com.ua"
   #ENTRYPOINT: ["/docker-entrypoint.sh"]
-  # -XX:+UseContainerSupport
-  # -Djava.security.egd=file:/dev/./urandom
-  # -Xmx256m -Xss512k -XX:MetaspaceSize=100m
   CMD: ['node', 'main.js']
 import:
   - artifact:  meteor-artifact
