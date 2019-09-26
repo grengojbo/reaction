@@ -22,7 +22,7 @@ services:
     #build:
     #  context: .
     #  target: meteor-dev
-    entrypoint: /bin/true
+    entrypoint: node --experimental-modules  main.js
     # command: /bin/bash
     #command: bash -c "time meteor npm install --no-audit && node ./.reaction/waitForMongo.js && node --experimental-modules ./.reaction/scripts/run.mjs"
     depends_on:
