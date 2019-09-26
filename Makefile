@@ -68,17 +68,10 @@ ifeq ($(AWS_REGION),)
   AWS_REGION := "eu-central-1"
 endif
 
-
-# Reaction
-METEOR_VERSION := "1.8.0.2"
-REACTION_DOCKER_BUILD := true
-APP_SOURCE_DIR := "/opt/reaction/src"
-APP_BUNDLE_DIR := "/opt/reaction/dist"
-# ENV PATH $PATH:/home/node/.meteor
-export METEOR_VERSION
-export REACTION_DOCKER_BUILD
-export APP_SOURCE_DIR
-export APP_BUNDLE_DIR
+ifeq ($(NODE_ENV),)
+	NODE_ENV := "development"
+endif
+export NODE_ENV
 
 export BUILD_DATE
 export K8S_NAMESPACE
@@ -125,6 +118,8 @@ update:
 	@sudo ./pre.sh
 	@sudo systemctl start docker-compose@elasticsearch.service
 
+shell:
+	@werf run --stages-storage :local --shell
 build:
 	@werf build --stages-storage :local --introspect-before-error
 

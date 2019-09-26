@@ -1,4 +1,4 @@
-# {{ $_ := env "SPECIFIC_ENV_HERE" | set . "GitBranch" }}
+# {{ $_ := env "NODE_ENV" | set . "NodeEnv" }}
 # {{ $_ := env "DEPLOY_MODE" | set . "DeployMode" }}
 # {{ $project := "reaction" }}
 # {{ $meteorVersion := "1.8.0.2"}}
@@ -71,6 +71,7 @@ shell:
     - 'echo -----------------------------------------------------------'
     - 'su - node -c "/opt/reaction/src/.reaction/build-{{ env "MODE" }}.sh"'
     - 'echo -----------------------------------------------------------'
+# {{- if eq .NodeEnv "production"}}
 ---
 image: '{{ $project }}-{{ env "MODE" }}'
 from: node:{{ $nodeVersion }}-slim
@@ -80,6 +81,7 @@ docker:
   ENV: 
     ROOT_URL: "http://localhost"
     PORT: "3000"
+    NODE_ENV: production
   EXPOSE: 
     - "3000"
   LABEL: 
@@ -88,7 +90,46 @@ docker:
   CMD: ['node', 'main.js']
 import:
   - artifact:  meteor-artifact
-    add: /opt/reaction/dist/bundle
+    # add: /opt/reaction/dist/bundle
+    add: /opt/reaction/dist/
+    to: /app
+    owner: node
+    group: node
+    after: install
+shell:
+  beforeInstall:
+    - 'echo "SECTION beforeInstall"'
+  install:
+    - 'echo -----------------------------------------------------------'
+    - 'echo "SECTION installi [mode: {{ env "MODE" }}]"'
+    - 'echo -----------------------------------------------------------'
+  beforeSetup:
+    - 'echo "SECTION beforeSetup"'
+  setup:
+    - 'echo -----------------------------------------------------------'
+    - 'echo "SECTION setup"'
+    - 'echo -----------------------------------------------------------'
+# {{- else }}
+---
+image: '{{ $project }}-{{ env "MODE" }}'
+from: node:{{ $nodeVersion }}-slim
+docker:
+  WORKDIR: /app
+  USER: node
+  ENV: 
+    ROOT_URL: "http://localhost"
+    PORT: "3000"
+    NODE_ENV: development
+  EXPOSE: 
+    - "3000"
+  LABEL: 
+    maintainer: "o.dolya@iwis.com.ua"
+  #ENTRYPOINT: ["/docker-entrypoint.sh"]
+  CMD: ['node', 'main.js']
+import:
+  - artifact:  meteor-artifact
+    # add: /opt/reaction/dist/bundle
+    add: /opt/reaction/src
     to: /app
     owner: node
     group: node
@@ -106,4 +147,5 @@ shell:
     - 'echo -----------------------------------------------------------'
     - 'echo "SECTION setup"'
     - 'echo -----------------------------------------------------------'
+# {{ end }}
 asLayers: false
