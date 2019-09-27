@@ -31,14 +31,14 @@ git:
 #  - fromPath: {{ env "CI_PROJECT_DIR" }}
 #    to: /result
 shell:
-  beforeInstall:
-    - 'echo "SECTION beforeInstall [artifact]"'
-    - 'echo "mkdir -p {{ $sourceDit }}/node_modules"'
+  #beforeInstall:
+  #  - 'echo "SECTION beforeInstall [artifact]"'
+  install:
+    - 'echo "SECTION install [artifact]"'
+    - 'mkdir -p {{ $sourceDit }}/node_modules'
     - 'chown node {{ $sourceDit }}/node_modules'
     - 'mkdir -p {{ $sourceDit }}/.meteor/local'
     - 'chown node {{ $sourceDit }}/.meteor/local'
-  install:
-    - 'echo "SECTION install [artifact]"'
     - 'echo -----------------------------------------------------------'
     - 'su - node -c "/opt/reaction/src/.reaction/build-install.sh"'
     - 'echo -----------------------------------------------------------'
