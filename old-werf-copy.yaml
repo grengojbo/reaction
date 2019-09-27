@@ -1,6 +1,5 @@
 # {{ $_ := env "NODE_ENV" | set . "NodeEnv" }}
 # {{ $_ := env "DEPLOY_MODE" | set . "DeployMode" }}
-# {{ $sourceDit := "/opt/reaction/src" }}
 # {{ $project := "reaction" }}
 # {{ $meteorVersion := "1.8.0.2"}}
 # {{ $nodeVersion := "8.11.4" }}
@@ -8,53 +7,71 @@ project: '{{ $project }}'
 configVersion: 1
 ---
 artifact: meteor-artifact
-from: reactioncommerce/base:v{{ $meteorVersion }}-meteor
+from: node:{{ $nodeVersion }}
 git:
   - add: /
-    to: {{ $sourceDit }}
+    to: /opt/reaction/src
     owner: node
     group: node
-    includePaths:
-      - 'package.json'
-      - 'package-lock.json'
-      - '.reaction'
-      - '.meteor'
-      - 'bin'
+    excludePaths:
+      - dist
+      - node_modules
     stageDependencies:
       install:
+        - '.reaction'
+        - '.meteor'
+      setup:
         - 'package.json'
         - 'package-lock.json'
-        - '.reaction'
-      setup:
-        - '.meteor'
 #mount:
 #  - fromPath: {{ env "CI_PROJECT_DIR" }}
 #    to: /result
 shell:
   beforeInstall:
     - 'echo "SECTION beforeInstall [artifact]"'
-    - 'echo "mkdir -p {{ $sourceDit }}/node_modules"'
-    - 'chown node {{ $sourceDit }}/node_modules'
-    - 'mkdir -p {{ $sourceDit }}/.meteor/local'
-    - 'chown node {{ $sourceDit }}/.meteor/local'
+    - 'apt-get update -y'
+    - 'apt-get install -y --no-install-recommends build-essential bsdtar bzip2 ca-certificates git python wget librdkafka-dev libsasl2-dev'
+    - 'rm -rf /var/lib/apt/lists/*'
+    - 'mkdir -p /opt/reaction/src'
+    - 'mkdir -p /opt/reaction/dist'
+    - 'chown -R node /opt/reaction/src'
+    - 'chown -R node /opt/reaction/dist'
+    - 'npm i -g reaction-cli'
+    - 'cd /opt/reaction/src'
+    - 'echo -----------------------------------------------------------'
+    - 'echo "# Installing Meteor {{ $meteorVersion }}"'
+    - 'echo "# replaces tar command with bsdtar in the install script (bsdtar -xf \"TARBALL_FILE\" -C \"INSTALL_TMPDIR\""'
+    - 'echo "# https://github.com/jshimko/meteor-launchpad/issues/39"'
+    - 'echo -----------------------------------------------------------'
+    - 'wget -O /tmp/install_meteor.sh https://install.meteor.com'
+    - 'sed -i.bak "s/RELEASE=.*/RELEASE=\"{{ $meteorVersion }}\"/g" /tmp/install_meteor.sh'
+    - 'sed -i.bak "s/tar -xzf.*/bsdtar -xf \"\$TARBALL_FILE\" -C \"\$INSTALL_TMPDIR\"/g" /tmp/install_meteor.sh'
+    - 'bash /tmp/install_meteor.sh'
+    - 'test ! -d /root/.meteor || mv /root/.meteor /home/node/'
+    - 'cd /home/node'
+    - 'test ! -d /home/node/.meteor/local || chown -Rh node .meteor/local'
+    #- 'rm /tmp/install_meteor.sh'
   install:
     - 'echo "SECTION install [artifact]"'
+    - rm -Rf /root/.config
+    - 'cd /opt/reaction/src'
     - 'echo -----------------------------------------------------------'
-    - 'su - node -c "/opt/reaction/src/.reaction/build-install.sh"'
+    - 'su - node -c "/opt/reaction/src/.reaction/pre-build.sh {{ $meteorVersion }}"'
     - 'echo -----------------------------------------------------------'
-  #beforeSetup:
-  #  - 'echo "SECTION beforeSetup [artifact]"'
-  # SHOW AVALIBLE Meteor version
-  #  - 'meteor show meteor'
+  beforeSetup:
+    - 'echo "SECTION beforeSetup [artifact]"'
+    - 'mkdir /opt/reaction/src/node_modules'
+    - 'chown node /opt/reaction/src/node_modules'
+    - 'mkdir -p /opt/reaction/src/.meteor/local'
+    - 'chown node /opt/reaction/src/.meteor/local'
   setup:
     - 'echo "SECTION setup [artifact mode: {{ env "MODE" }}]"'
+    - 'cd /opt/reaction/src'
+    - 'export PATH=$PATH:/home/node/.meteor:/opt/reaction/src/node_modules/.bin'
     - 'echo -----------------------------------------------------------'
-    # {{- if eq .NodeEnv "production"}}
     - 'su - node -c "/opt/reaction/src/.reaction/build-{{ env "MODE" }}.sh"'
     - 'echo -----------------------------------------------------------'
-    # {{ end }}
 # {{- if eq .NodeEnv "production"}}
-#    - 'export PATH=$PATH:/home/node/.meteor:{{ $sourceDit }}/node_modules/.bin'
 ---
 image: '{{ $project }}-{{ env "MODE" }}'
 from: node:{{ $nodeVersion }}-slim
